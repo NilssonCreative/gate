@@ -7,6 +7,7 @@ import (
 	"github.com/robinbraemer/event"
 	"go.minekube.com/gate/pkg/edition/java/proxy"
 	"go.minekube.com/gate/pkg/edition/java/proxy/message"
+	"go.minekube.com/gate/pkg/util/permission"
 )
 
 var Plugin = proxy.Plugin{
@@ -43,11 +44,14 @@ func (p *PluginMsg) init() error {
 
 // Register event subscribers
 func (p *PluginMsg) registerSubscribers() {
-	// Send message on server switch.
-	event.Subscribe(p.Event(), 0, p.onServerSwitch)
+	event.Subscribe(p.Event(), 0, p.onPermissionsSetup)
+
+	p.log.Info("Registered permissions setup event subscriber")
 
 	// Change the MOTD response.
 	//event.Subscribe(p.Event(), 0, pingHandler())
+
+	event.Subscribe(p.Event(), 0, p.onConnect)
 
 	// Show a boss bar to all players on this proxy.
 	//event.Subscribe(p.Event(), 0, p.bossBarDisplay())
@@ -55,10 +59,11 @@ func (p *PluginMsg) registerSubscribers() {
 	// Listen for plugin messages.
 	event.Subscribe(p.Event(), 0, p.onPluginMessage)
 
-	// Listen for plugin messages during login.
-	event.Subscribe(p.Event(), 0, p.onServerLoginPluginMessage)
-
 	p.log.Info("Registered plugin message event subscriber")
+
+	// Listen for plugin messages during login.
+	//event.Subscribe(p.Event(), 0, p.onServerLoginPluginMessage)
+
 }
 
 func (p *PluginMsg) registerPluginChannels() {
@@ -108,8 +113,27 @@ func (p *PluginMsg) onPluginMessage(e proxy.PluginMessageEvent) {
 	// }
 }
 
-func (p *PluginMsg) onServerPreConnect(e proxy.ServerPreConnectEvent) {
-	p.log.Info("ServerPreConnectEvent fired!")
+func (p *PluginMsg) onPermissionsSetup(e proxy.PermissionsSetupEvent) {
+	p.log.Info("PermissionsSetupEvent fired!")
 
-	//p.registerPluginChannels()
+	e.SetFunc(func(permission string) permission.TriState {
+		p.log.Info("Permission check", "permission", permission)
+		return permission.TriState(1) // permission.Undefined
+	})
+	// if player, ok := e.Subject().(proxy.Player); ok {
+	// 	// e.Subject() IS a proxy.Player
+	// 	// 'player' is now the concrete value
+	// 	p.log.Info("Setting up permissions for player", "player", player.Username())
+
+	// 	// type Func func(permission string) TriState
+	// 	e.SetFunc(func(permission string) permission.TriState {
+	// 		p.log.Info("Permission check", "player", player.Username(), "permission", permission)
+	// 		// For demonstration purposes, we allow the "example.permission" permission and deny all others.
+	// 		// if permission == "example.permission" {
+	// 		// 	return 1 // permission.True
+	// 		// }
+	// 		return 2 // permission.Undefined
+	// 	})
+
+	// }
 }
