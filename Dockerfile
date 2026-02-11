@@ -18,7 +18,7 @@ COPY gate.go ./
 ARG TARGETOS TARGETARCH
 
 # Build
-ARG VERSION=NBN-0.0.1
+ARG VERSION=unknown
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -ldflags="-s -w -X 'go.minekube.com/gate/pkg/version.Version=${VERSION}'" -a -o gate gate.go
 

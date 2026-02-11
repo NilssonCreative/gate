@@ -62,13 +62,20 @@ func (p *PluginMsg) registerSubscribers() {
 
 func (p *PluginMsg) onPluginMessage(e proxy.PluginMessageEvent) {
 
-	e.SetForward(false)
-
 	// Another plugin may have already cancelled the event.
 	if !e.Allowed() {
 		p.log.Info("Plugin message event already cancelled, not responding")
 		return
 	}
+
+	if _, ok := e.Target().(proxy.Player); ok {
+		// e.Source() IS a proxy.Player
+		// 'player' is now the concrete value
+		p.log.Info("Plugin message receieved with target player, do nothing")
+		return
+	}
+
+	e.SetForward(false)
 
 	if e.Source() == nil {
 		p.log.Info("Plugin message received", "source type", "<nil>", "length", len(e.Data()))
