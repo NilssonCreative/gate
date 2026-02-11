@@ -12,21 +12,47 @@ import (
 var Plugin = proxy.Plugin{
 	Name: "PluginMsg",
 	Init: func(ctx context.Context, p *proxy.Proxy) error {
-		log := logr.FromContextOrDiscard(ctx).WithName("pluginMsg")
-		log.Info("Hello from PluginMsg plugin!")
+		log := logr.FromContextOrDiscard(ctx).WithName("PluginMsg")
 
-		pl := &plugin{proxy: p, log: &log}
-		event.Subscribe(p.Event(), 0, pl.onPluginMessage)
-		return nil
+		return newPluginMsg(p, &log).init()
 	},
 }
 
-type plugin struct {
-	proxy *proxy.Proxy
-	log   *logr.Logger
+type PluginMsg struct {
+	*proxy.Proxy
+	log *logr.Logger
 }
 
-func (p *plugin) onPluginMessage(e proxy.PluginMessageEvent) {
+func newPluginMsg(proxy *proxy.Proxy, log *logr.Logger) *PluginMsg {
+	return &PluginMsg{
+		Proxy: proxy,
+		log:   log,
+	}
+}
+
+// initialize the plugin, e.g. register commands and event handlers
+func (p *PluginMsg) init() error {
+	//p.registerCommands()
+	p.registerSubscribers()
+	return nil
+}
+
+// Register event subscribers
+func (p *PluginMsg) registerSubscribers() {
+	// Send message on server switch.
+	//event.Subscribe(p.Event(), 0, p.onServerSwitch)
+
+	// Change the MOTD response.
+	//event.Subscribe(p.Event(), 0, pingHandler())
+
+	// Show a boss bar to all players on this proxy.
+	//event.Subscribe(p.Event(), 0, p.bossBarDisplay())
+
+	// Listen for plugin messages.
+	event.Subscribe(p.Event(), 0, p.onPluginMessage)
+}
+
+func (p *PluginMsg) onPluginMessage(e proxy.PluginMessageEvent) {
 
 	if e.Source() == nil {
 		p.log.Info("Plugin message received", "source type", "<nil>", "length", len(e.Data()))
