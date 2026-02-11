@@ -68,6 +68,8 @@ func (p *PluginMsg) onPluginMessage(e proxy.PluginMessageEvent) {
 		return
 	}
 
+	e.SetForward(false)
+
 	if e.Source() == nil {
 		p.log.Info("Plugin message received", "source type", "<nil>", "length", len(e.Data()))
 	} else {
