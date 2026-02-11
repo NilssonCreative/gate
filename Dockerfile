@@ -11,13 +11,14 @@ RUN go mod download
 # Copy the go source
 COPY cmd ./cmd
 COPY pkg ./pkg
+COPY plugins ./plugins
 COPY gate.go ./
 
 # Automatically provided by the buildkit
 ARG TARGETOS TARGETARCH
 
 # Build
-ARG VERSION=unknown
+ARG VERSION=NBN-0.0.1
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -ldflags="-s -w -X 'go.minekube.com/gate/pkg/version.Version=${VERSION}'" -a -o gate gate.go
 
