@@ -2,68 +2,81 @@ package pluginmsg
 
 import (
 	"context"
+	"fmt"
+	"math"
 
 	"github.com/go-logr/logr"
 	"github.com/robinbraemer/event"
 	"go.minekube.com/gate/pkg/edition/java/proxy"
 	"go.minekube.com/gate/pkg/edition/java/proxy/message"
-	"go.minekube.com/gate/pkg/util/permission"
+)
+
+const (
+	Name = "lazygate" // Name represents plugin name.
 )
 
 var Plugin = proxy.Plugin{
 	Name: "PluginMsg",
-	Init: func(ctx context.Context, p *proxy.Proxy) error {
-		log, err := logr.FromContext(ctx)
-		if err != nil {
-			return err
-		}
+	Init: func(ctx context.Context, proxy *proxy.Proxy) error {
+		//logger, err := logr.FromContext(ctx)
+		// if err != nil {
+		// 	return err
+		// }
 
-		return newPluginMsg(p, &log).init()
+		return newPluginMsg(ctx, proxy).init()
 	},
 }
 
 type PluginMsg struct {
-	*proxy.Proxy
-	log *logr.Logger
+	ctx   context.Context // Plugin context.
+	log   logr.Logger     // Plugin logger.
+	proxy *proxy.Proxy    // Gate proxy instance.
 }
 
-func newPluginMsg(proxy *proxy.Proxy, log *logr.Logger) *PluginMsg {
+func newPluginMsg(ctx context.Context, proxy *proxy.Proxy) *PluginMsg {
 	return &PluginMsg{
-		Proxy: proxy,
-		log:   log,
+		ctx:   ctx,
+		proxy: proxy,
 	}
 }
 
 // initialize the plugin, e.g. register commands and event handlers
 func (p *PluginMsg) init() error {
+	p.log = logr.FromContextOrDiscard(p.ctx).WithName("PluginMsg")
 	//p.registerCommands()
-	p.registerSubscribers()
+	//p.registerSubscribers()
 	//p.registerPluginChannels()
+
+	if err := p.initHandlers(); err != nil {
+		return err
+	}
 	return nil
 }
 
-// Register event subscribers
-func (p *PluginMsg) registerSubscribers() {
-	event.Subscribe(p.Event(), 0, p.onPermissionsSetup)
+// initHandlers subscribes event handlers.
+func (p *PluginMsg) initHandlers() error {
+	eventMgr := p.proxy.Event()
 
-	p.log.Info("Registered permissions setup event subscriber")
+	//event.Subscribe(p.Event(), 0, p.onPermissionsSetup)
+	//p.log.Info("Registered permissions setup event subscriber")
 
 	// Change the MOTD response.
 	//event.Subscribe(p.Event(), 0, pingHandler())
-
-	event.Subscribe(p.Event(), 0, p.onConnect)
 
 	// Show a boss bar to all players on this proxy.
 	//event.Subscribe(p.Event(), 0, p.bossBarDisplay())
 
 	// Listen for plugin messages.
-	event.Subscribe(p.Event(), 0, p.onPluginMessage)
+	event.Subscribe(eventMgr, math.MaxInt, p.onPluginMessage)
 
 	p.log.Info("Registered plugin message event subscriber")
 
 	// Listen for plugin messages during login.
-	//event.Subscribe(p.Event(), 0, p.onServerLoginPluginMessage)
+	event.Subscribe(eventMgr, math.MaxInt, p.onServerLoginPluginMessage)
 
+	p.log.Info("Registered server login plugin message event subscriber")
+
+	return nil
 }
 
 func (p *PluginMsg) registerPluginChannels() {
@@ -76,50 +89,35 @@ func (p *PluginMsg) registerPluginChannels() {
 		return
 	}
 
-	p.ChannelRegistrar().Register(luckId)
+	p.proxy.ChannelRegistrar().Register(luckId)
 }
 
-func (p *PluginMsg) onServerLoginPluginMessage(e proxy.ServerLoginPluginMessageEvent) {
-	p.log.Info("ServerLoginPluginMessageEvent fired!")
+func (p *PluginMsg) onPluginMessage(e *proxy.PluginMessageEvent) {
 
-	res := e.Result()
-
-	p.log.Info("Plugin message received during login", "allowed", res.Allowed())
-}
-
-func (p *PluginMsg) onPluginMessage(e proxy.PluginMessageEvent) {
-
-	p.log.Info("PluginMessageEvent fired!")
+	p.log.Info("Plugin message received", "source type", fmt.Sprintf("%T", e.Source()), "length", len(e.Data()))
 
 	// Another plugin may have already cancelled the event.
 	if !e.Allowed() {
 		p.log.Info("Plugin message event already cancelled, not responding")
 		return
 	}
-
-	// if _, ok := e.Target().(proxy.Player); ok {
-	// 	// e.Source() IS a proxy.Player
-	// 	// 'player' is now the concrete value
-	// 	p.log.Info("Plugin message receieved with target player, do nothing")
-	// 	return
-	// }
-
-	// e.SetForward(false)
-
-	// if e.Source() == nil {
-	// 	p.log.Info("Plugin message received", "source type", "<nil>", "length", len(e.Data()))
-	// } else {
-	// 	p.log.Info("Plugin message received", "source type", fmt.Sprintf("%T", e.Source()), "length", len(e.Data()))
-	// }
 }
 
-func (p *PluginMsg) onPermissionsSetup(e proxy.PermissionsSetupEvent) {
-	p.log.Info("PermissionsSetupEvent fired!")
+func (p *PluginMsg) onServerLoginPluginMessage(e *proxy.ServerLoginPluginMessageEvent) {
 
-	e.SetFunc(func(permission string) permission.TriState {
-		p.log.Info("Permission check", "permission", permission)
-		return permission.TriState(1) // permission.Undefined
-	})
+	p.log.Info("ServerLoginPluginMessageEvent fired!")
+
+	res := e.Result()
+
+	p.log.Info("Plugin message received during login", "allowed", res.Allowed())
+
+}
+
+func (p *PluginMsg) onPermissionsSetup(e *proxy.PermissionsSetupEvent) func(*proxy.PermissionsSetupEvent) {
+	return func(e *proxy.PermissionsSetupEvent) {
+		p.log.Info("PermissionsSetupEvent fired!")
+	}
+
 	// if player, ok := e.Subject().(proxy.Player); ok {
 	// 	// e.Subject() IS a proxy.Player
 	// 	// 'player' is now the concrete value
