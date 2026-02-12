@@ -71,9 +71,9 @@ func (p *PluginMsg) initHandlers() error {
 	p.log.Info("Registered plugin message event subscriber")
 
 	// Listen for plugin messages during login.
-	//event.Subscribe(eventMgr, math.MaxInt, p.onServerLoginPluginMessage)
+	event.Subscribe(eventMgr, math.MaxInt, p.onServerLoginPluginMessage)
 
-	//p.log.Info("Registered server login plugin message event subscriber")
+	p.log.Info("Registered server login plugin message event subscriber")
 
 	return nil
 }
@@ -105,7 +105,7 @@ func onPluginMessage(logger logr.Logger) func(*proxy.PluginMessageEvent) {
 		// Check the channel and respond to a specific one.
 		if e.Identifier().ID() == "luckperms:update" {
 			logger.Info("[PLUGIN MESSAGE] Received plugin message on luckperms:update")
-			e.SetForward(false)
+			//e.SetForward(false)
 		}
 	}
 }

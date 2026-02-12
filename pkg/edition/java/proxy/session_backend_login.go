@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	"go.minekube.com/gate/pkg/edition/java/internal/velocity"
@@ -79,22 +78,7 @@ func (b *backendLoginSessionHandler) Deactivated() {
 
 func (b *backendLoginSessionHandler) HandlePacket(pc *proto.PacketContext) {
 
-	// isKnown := "unknown"
-
-	// if pc.KnownPacket() {
-	// 	isKnown = "known"
-	// }
-
-	// b.log.Info(fmt.Sprintf("[BackendLoginSessionHandler] Received %s packet with", isKnown), "direction", pc.Direction, "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet), "packet string", pc.String())
-
-	// if msg, ok := pc.Packet.(*packet.LoginPluginMessage); ok {
-	// 	b.log.Info("[BackendLoginSessionHandler] Packet is a login plugin message", "channel", msg.Channel, "data length", len(msg.Data))
-	// }
-
-	b.log.Info("[BackendLoginSessionHandler] Received packet", "direction", pc.Direction, "ID", pc.PacketID.String(), "packet type", fmt.Sprintf("%T", pc.Packet))
-
 	if !pc.KnownPacket() {
-		b.log.Info("[BACKEND PLAY SESSION HANDLER] Unknown packet", "ID", pc.PacketID.String())
 		return // ignore unknown
 	}
 

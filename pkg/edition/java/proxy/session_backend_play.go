@@ -59,25 +59,8 @@ func newBackendPlaySessionHandler(serverConn *serverConnection) (netmc.SessionHa
 
 func (b *backendPlaySessionHandler) HandlePacket(pc *proto.PacketContext) {
 
-	// isKnown := "unknown"
-
-	// if pc.KnownPacket() {
-	// 	isKnown = "known"
-	// }
-
-	// if pc.PacketID != 0x2c && pc.PacketID != 0x1b && pc.PacketID != 0x2b { // Avoid logging keep-alive packets, which are very frequent and not useful for debugging.
-	// 	b.log.Info(fmt.Sprintf("[BackendPlaySessionHandler] Received %s packet with", isKnown), "direction", pc.Direction, "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet), "packet string", pc.String())
-
-	// 	if msg, ok := pc.Packet.(*plugin.Message); ok {
-	// 		b.log.Info("[BackendPlaySessionHandler] Packet is a plugin message", "channel", msg.Channel, "data length", len(msg.Data))
-	// 	}
-	// }
-
-	b.log.Info("[BackendPlaySessionHandler] Received packet", "direction", pc.Direction, "ID", pc.PacketID.String(), "packet type", fmt.Sprintf("%T", pc.Packet))
-
 	if !pc.KnownPacket() {
 		// forward unknown packet to player
-		b.log.Info("[BACKEND PLAY SESSION HANDLER] Unknown packet", "Protocol", pc.Protocol.String(), "ID", pc.PacketID.String())
 		b.forwardToPlayer(pc, nil)
 		return
 	}
@@ -208,11 +191,8 @@ func (b *backendPlaySessionHandler) handlePluginMessage(packet *plugin.Message, 
 		return
 	}
 
-	b.log.Info("[Play - handlePluginMessage]", "Channel", packet.Channel, "Data", fmt.Sprintf("%x", packet.Data))
-
 	// Register and unregister packets are simply forwarded to the server as-is.
 	if plugin.IsRegister(packet) || plugin.IsUnregister(packet) {
-		b.log.Info("[Play - handlePluginMessage] - Register/Unregister packet. Forwarding to server without firing event.", "channel", packet.Channel, "data length", len(packet.Data), "\nData (hex)", fmt.Sprintf("%x", packet.Data))
 		if serverMc, ok := b.serverConn.ensureConnected(); ok {
 			_ = serverMc.WritePacket(packet)
 		}
