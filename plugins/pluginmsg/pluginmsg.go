@@ -2,7 +2,6 @@ package pluginmsg
 
 import (
 	"context"
-	"fmt"
 	"math"
 
 	"github.com/go-logr/logr"
@@ -43,9 +42,9 @@ func newPluginMsg(ctx context.Context, proxy *proxy.Proxy) *PluginMsg {
 // initialize the plugin, e.g. register commands and event handlers
 func (p *PluginMsg) init() error {
 	p.log = logr.FromContextOrDiscard(p.ctx).WithName("PluginMsg")
+
 	//p.registerCommands()
-	//p.registerSubscribers()
-	p.registerPluginChannels()
+	p.initPluginChannels()
 
 	if err := p.initHandlers(); err != nil {
 		return err
@@ -67,23 +66,23 @@ func (p *PluginMsg) initHandlers() error {
 	//event.Subscribe(p.Event(), 0, p.bossBarDisplay())
 
 	// Listen for plugin messages.
-	event.Subscribe(eventMgr, math.MaxInt, p.onPluginMessage)
+	event.Subscribe(eventMgr, math.MaxInt, onPluginMessage(p.log))
 
 	p.log.Info("Registered plugin message event subscriber")
 
 	// Listen for plugin messages during login.
-	event.Subscribe(eventMgr, math.MaxInt, p.onServerLoginPluginMessage)
+	//event.Subscribe(eventMgr, math.MaxInt, p.onServerLoginPluginMessage)
 
-	p.log.Info("Registered server login plugin message event subscriber")
+	//p.log.Info("Registered server login plugin message event subscriber")
 
 	return nil
 }
 
-func (p *PluginMsg) registerPluginChannels() {
+func (p *PluginMsg) initPluginChannels() {
 	// Register a plugin channel for sending messages to the client.
 	//p.Proxy().RegisterPluginChannel("my:channel")
 
-	luckId, err := message.NewChannelIdentifier("pluginmsg", "main")
+	luckId, err := message.NewChannelIdentifier("luckperms", "update")
 	if err != nil {
 		p.log.Error(err, "Failed to create plugin channel identifier")
 		return
@@ -92,14 +91,22 @@ func (p *PluginMsg) registerPluginChannels() {
 	p.proxy.ChannelRegistrar().Register(luckId)
 }
 
-func (p *PluginMsg) onPluginMessage(e *proxy.PluginMessageEvent) {
+func onPluginMessage(logger logr.Logger) func(*proxy.PluginMessageEvent) {
 
-	p.log.Info("Plugin message received", "source type", fmt.Sprintf("%T", e.Source()), "length", len(e.Data()))
+	return func(e *proxy.PluginMessageEvent) {
+		logger.Info("[PLUGIN MESSAGE] Received plugin message", "ID", e.Identifier().ID())
 
-	// Another plugin may have already cancelled the event.
-	if !e.Allowed() {
-		p.log.Info("Plugin message event already cancelled, not responding")
-		return
+		// Another plugin may have already cancelled the event.
+		if !e.Allowed() {
+			logger.Info("[PLUGIN MESSAGE] Plugin message event already cancelled, not responding")
+			return
+		}
+
+		// Check the channel and respond to a specific one.
+		if e.Identifier().ID() == "luckperms:update" {
+			logger.Info("[PLUGIN MESSAGE] Received plugin message on luckperms:update")
+			e.SetForward(false)
+		}
 	}
 }
 

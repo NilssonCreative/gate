@@ -58,19 +58,22 @@ const (
 // HandlePacket handles incoming packets. It checks if the packet is known and if the connection should handle it.
 // It then switches on the type of the packet and calls the appropriate handler method.
 func (b *backendConfigSessionHandler) HandlePacket(pc *proto.PacketContext) {
-	isKnown := "unknown"
+	// isKnown := "unknown"
 
-	if pc.KnownPacket() {
-		isKnown = "known"
-	}
+	// if pc.KnownPacket() {
+	// 	isKnown = "known"
+	// }
 
-	b.log.Info(fmt.Sprintf("[BackendConfigSessionHandler] Received %s packet", isKnown), "direction", pc.Direction, "packet", fmt.Sprintf("%T", pc.Packet), "packet string", pc.String())
+	// b.log.Info(fmt.Sprintf("[BackendConfigSessionHandler] Received %s packet", isKnown), "direction", pc.Direction, "packet", fmt.Sprintf("%T", pc.Packet), "packet string", pc.String())
 
-	if msg, ok := pc.Packet.(*plugin.Message); ok {
-		b.log.Info("[BackendConfigSessionHandler] Packet is a plugin message", "channel", msg.Channel, "data length", len(msg.Data))
-	}
+	// if msg, ok := pc.Packet.(*plugin.Message); ok {
+	// 	b.log.Info("[BackendConfigSessionHandler] Packet is a plugin message", "channel", msg.Channel, "data length", len(msg.Data))
+	// }
+
+	b.log.Info("[BackendConfigSessionHandler] Received packet", "direction", pc.Direction, "ID", pc.PacketID.String(), "packet type", fmt.Sprintf("%T", pc.Packet))
 
 	if !pc.KnownPacket() {
+		b.log.Info("[BACKEND CONFIG SESSION HANDLER] Unknown packet", "ID", pc.PacketID.String())
 		// forward unknown packet to player
 		b.forwardToPlayer(pc, nil)
 		return

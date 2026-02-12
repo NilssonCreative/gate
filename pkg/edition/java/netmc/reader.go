@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"strings"
@@ -61,7 +62,7 @@ func (r *reader) ReadPacket() (*proto.PacketContext, error) {
 			r.log.V(1).Info("error reading packet, recovered", "error", err)
 			return nil, ErrReadPacketRetry
 		}
-		r.log.V(1).Info("error reading packet, closing connection", "error", err)
+		r.log.V(1).Info("error reading packet, closing connection", "error", err, "data", fmt.Sprintf("%x", r.readBuf.Buffered()))
 		return nil, err
 	}
 	return packetCtx, nil
