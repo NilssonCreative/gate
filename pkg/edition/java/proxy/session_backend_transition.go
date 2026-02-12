@@ -3,6 +3,9 @@ package proxy
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/robinbraemer/event"
 	"go.minekube.com/gate/pkg/edition/java/netmc"
@@ -14,8 +17,6 @@ import (
 	"go.minekube.com/gate/pkg/edition/java/proxy/phase"
 	"go.minekube.com/gate/pkg/edition/java/proxy/tablist"
 	"go.minekube.com/gate/pkg/gate/proto"
-	"reflect"
-	"time"
 )
 
 type backendTransitionSessionHandler struct {
@@ -71,6 +72,15 @@ func (b *backendTransitionSessionHandler) Deactivated() {
 }
 
 func (b *backendTransitionSessionHandler) HandlePacket(pc *proto.PacketContext) {
+
+	isKnown := "unknown"
+
+	if pc.KnownPacket() {
+		isKnown = "known"
+	}
+
+	b.log.Info(fmt.Sprintf("[BackendTransitionSessionHandler] Received %s packet", isKnown), "packet", fmt.Sprintf("%T", pc.Packet))
+
 	if !pc.KnownPacket() {
 		return // ignore unknown packet
 	}

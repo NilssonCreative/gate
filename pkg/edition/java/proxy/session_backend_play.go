@@ -58,6 +58,15 @@ func newBackendPlaySessionHandler(serverConn *serverConnection) (netmc.SessionHa
 }
 
 func (b *backendPlaySessionHandler) HandlePacket(pc *proto.PacketContext) {
+
+	isKnown := "unknown"
+
+	if pc.KnownPacket() {
+		isKnown = "known"
+	}
+
+	b.log.Info(fmt.Sprintf("[BackendPlaySessionHandler] Received %s packet", isKnown), "packet", fmt.Sprintf("%T", pc.Packet))
+
 	if !pc.KnownPacket() {
 		// forward unknown packet to player
 		b.forwardToPlayer(pc, nil)

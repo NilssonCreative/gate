@@ -58,6 +58,14 @@ const (
 // HandlePacket handles incoming packets. It checks if the packet is known and if the connection should handle it.
 // It then switches on the type of the packet and calls the appropriate handler method.
 func (b *backendConfigSessionHandler) HandlePacket(pc *proto.PacketContext) {
+	isKnown := "unknown"
+
+	if pc.KnownPacket() {
+		isKnown = "known"
+	}
+
+	b.log.Info(fmt.Sprintf("[BackendConfigSessionHandler] Received %s packet", isKnown), "packet", fmt.Sprintf("%T", pc.Packet))
+
 	if !pc.KnownPacket() {
 		// forward unknown packet to player
 		b.forwardToPlayer(pc, nil)

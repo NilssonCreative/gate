@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 
 	"go.minekube.com/gate/pkg/edition/java/internal/velocity"
@@ -77,6 +78,15 @@ func (b *backendLoginSessionHandler) Deactivated() {
 }
 
 func (b *backendLoginSessionHandler) HandlePacket(pc *proto.PacketContext) {
+
+	isKnown := "unknown"
+
+	if pc.KnownPacket() {
+		isKnown = "known"
+	}
+
+	b.log.Info(fmt.Sprintf("[BackendLoginSessionHandler] Received %s packet", isKnown), "packet", fmt.Sprintf("%T", pc.Packet))
+
 	if !pc.KnownPacket() {
 		return // ignore unknown
 	}
