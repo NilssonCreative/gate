@@ -66,6 +66,10 @@ func (b *backendConfigSessionHandler) HandlePacket(pc *proto.PacketContext) {
 
 	b.log.Info(fmt.Sprintf("[BackendConfigSessionHandler] Received %s packet", isKnown), "packet", fmt.Sprintf("%T", pc.Packet))
 
+	if msg, ok := pc.Packet.(*plugin.Message); ok {
+		b.log.Info("[BackendConfigSessionHandler] Packet is a plugin message", "channel", msg.Channel, "data length", len(msg.Data))
+	}
+
 	if !pc.KnownPacket() {
 		// forward unknown packet to player
 		b.forwardToPlayer(pc, nil)
@@ -224,6 +228,9 @@ func (b *backendConfigSessionHandler) handleTransfer(p *packet.Transfer) {
 }
 
 func (b *backendConfigSessionHandler) handlePluginMessage(pc *proto.PacketContext, p *plugin.Message) {
+
+	b.log.Info("Received Config plugin message from backend server", "channel", p.Channel, "data length", len(p.Data))
+
 	if plugin.McBrand(p) {
 		_ = b.serverConn.player.WritePacket(plugin.RewriteMinecraftBrand(p,
 			b.serverConn.player.Protocol()))

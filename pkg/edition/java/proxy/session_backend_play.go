@@ -65,7 +65,11 @@ func (b *backendPlaySessionHandler) HandlePacket(pc *proto.PacketContext) {
 		isKnown = "known"
 	}
 
-	b.log.Info(fmt.Sprintf("[BackendPlaySessionHandler] Received %s packet", isKnown), "packet", fmt.Sprintf("%T", pc.Packet))
+	b.log.Info(fmt.Sprintf("[BackendPlaySessionHandler] Received %s packet with", isKnown), "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet))
+
+	if msg, ok := pc.Packet.(*plugin.Message); ok {
+		b.log.Info("[BackendPlaySessionHandler] Packet is a plugin message", "channel", msg.Channel, "data length", len(msg.Data))
+	}
 
 	if !pc.KnownPacket() {
 		// forward unknown packet to player

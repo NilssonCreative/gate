@@ -85,7 +85,11 @@ func (b *backendLoginSessionHandler) HandlePacket(pc *proto.PacketContext) {
 		isKnown = "known"
 	}
 
-	b.log.Info(fmt.Sprintf("[BackendLoginSessionHandler] Received %s packet", isKnown), "packet", fmt.Sprintf("%T", pc.Packet))
+	b.log.Info(fmt.Sprintf("[BackendLoginSessionHandler] Received %s packet with", isKnown), "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet))
+
+	if msg, ok := pc.Packet.(*packet.LoginPluginMessage); ok {
+		b.log.Info("[BackendLoginSessionHandler] Packet is a login plugin message", "channel", msg.Channel, "data length", len(msg.Data))
+	}
 
 	if !pc.KnownPacket() {
 		return // ignore unknown
@@ -124,6 +128,9 @@ func (b *backendLoginSessionHandler) handleLoginPluginMessage(p *packet.LoginPlu
 	if !ok {
 		return
 	}
+
+	b.log.Info("Received LoginPluginMessage from backend server", "channel", p.Channel, "data length", len(p.Data))
+
 	cfg := b.config()
 	if cfg.Forwarding.Mode == config.VelocityForwardingMode && p.Channel == velocity.IpForwardingChannel {
 
