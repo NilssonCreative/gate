@@ -85,7 +85,7 @@ func (b *backendLoginSessionHandler) HandlePacket(pc *proto.PacketContext) {
 		isKnown = "known"
 	}
 
-	b.log.Info(fmt.Sprintf("[BackendLoginSessionHandler] Received %s packet with", isKnown), "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet))
+	b.log.Info(fmt.Sprintf("[BackendLoginSessionHandler] Received %s packet with", isKnown), "direction", pc.Direction, "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet), "packet string", pc.String())
 
 	if msg, ok := pc.Packet.(*packet.LoginPluginMessage); ok {
 		b.log.Info("[BackendLoginSessionHandler] Packet is a login plugin message", "channel", msg.Channel, "data length", len(msg.Data))

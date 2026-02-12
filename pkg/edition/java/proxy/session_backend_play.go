@@ -65,10 +65,12 @@ func (b *backendPlaySessionHandler) HandlePacket(pc *proto.PacketContext) {
 		isKnown = "known"
 	}
 
-	b.log.Info(fmt.Sprintf("[BackendPlaySessionHandler] Received %s packet with", isKnown), "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet))
+	if pc.PacketID != 0x2c && pc.PacketID != 0x1b && pc.PacketID != 0x2b { // Avoid logging keep-alive packets, which are very frequent and not useful for debugging.
+		b.log.Info(fmt.Sprintf("[BackendPlaySessionHandler] Received %s packet with", isKnown), "direction", pc.Direction, "ID", pc.PacketID, "packet", fmt.Sprintf("%T", pc.Packet), "packet string", pc.String())
 
-	if msg, ok := pc.Packet.(*plugin.Message); ok {
-		b.log.Info("[BackendPlaySessionHandler] Packet is a plugin message", "channel", msg.Channel, "data length", len(msg.Data))
+		if msg, ok := pc.Packet.(*plugin.Message); ok {
+			b.log.Info("[BackendPlaySessionHandler] Packet is a plugin message", "channel", msg.Channel, "data length", len(msg.Data))
+		}
 	}
 
 	if !pc.KnownPacket() {

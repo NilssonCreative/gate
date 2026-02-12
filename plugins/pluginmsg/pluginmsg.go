@@ -45,7 +45,7 @@ func (p *PluginMsg) init() error {
 	p.log = logr.FromContextOrDiscard(p.ctx).WithName("PluginMsg")
 	//p.registerCommands()
 	//p.registerSubscribers()
-	//p.registerPluginChannels()
+	p.registerPluginChannels()
 
 	if err := p.initHandlers(); err != nil {
 		return err
