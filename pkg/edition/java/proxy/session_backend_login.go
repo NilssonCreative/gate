@@ -116,8 +116,6 @@ func (b *backendLoginSessionHandler) handleLoginPluginMessage(p *packet.LoginPlu
 		return
 	}
 
-	b.log.Info("Received LoginPluginMessage from backend server", "channel", p.Channel, "data length", len(p.Data))
-
 	cfg := b.config()
 	if cfg.Forwarding.Mode == config.VelocityForwardingMode && p.Channel == velocity.IpForwardingChannel {
 
