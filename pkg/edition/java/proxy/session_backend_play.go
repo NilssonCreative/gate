@@ -222,7 +222,6 @@ func (b *backendPlaySessionHandler) handlePluginMessage(packet *plugin.Message, 
 
 	id, ok := b.proxy().ChannelRegistrar().FromID(packet.Channel)
 	if !ok {
-		b.log.Info("Channel not okay!!!")
 		b.forwardToPlayer(pc, nil)
 		return
 	}

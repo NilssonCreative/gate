@@ -8,6 +8,7 @@ import (
 	"github.com/robinbraemer/event"
 	"go.minekube.com/gate/pkg/edition/java/proxy"
 	"go.minekube.com/gate/pkg/edition/java/proxy/message"
+	"go.minekube.com/gate/pkg/util/permission"
 )
 
 const (
@@ -56,8 +57,8 @@ func (p *PluginMsg) init() error {
 func (p *PluginMsg) initHandlers() error {
 	eventMgr := p.proxy.Event()
 
-	//event.Subscribe(p.Event(), 0, p.onPermissionsSetup)
-	//p.log.Info("Registered permissions setup event subscriber")
+	event.Subscribe(eventMgr, 0, p.onPermissionsSetup)
+	p.log.Info("Registered permissions setup event subscriber")
 
 	// Change the MOTD response.
 	//event.Subscribe(p.Event(), 0, pingHandler())
@@ -120,25 +121,25 @@ func (p *PluginMsg) onServerLoginPluginMessage(e *proxy.ServerLoginPluginMessage
 
 }
 
-func (p *PluginMsg) onPermissionsSetup(e *proxy.PermissionsSetupEvent) func(*proxy.PermissionsSetupEvent) {
-	return func(e *proxy.PermissionsSetupEvent) {
-		p.log.Info("PermissionsSetupEvent fired!")
+func (p *PluginMsg) onPermissionsSetup(e *proxy.PermissionsSetupEvent) {
+
+	if player, ok := e.Subject().(proxy.Player); ok {
+		// e.Subject() IS a proxy.Player
+		// 'player' is now the concrete value
+		p.log.Info("Setting up permissions for player", "player", player.Username())
+
+		// type Func func(permission string) TriState
+		e.SetFunc(func(permission string) permission.TriState {
+			p.log.Info("Permission check", "player", player.Username(), "permission", permission)
+			// For demonstration purposes, we allow the "example.permission" permission and deny all others.
+			// if permission == "example.permission" {
+			// 	return 1 // permission.True
+			// }
+			if player.Username() == "NerdByNature" {
+				return 1 // permission.True
+			}
+			return 0 // permission.False
+		})
+
 	}
-
-	// if player, ok := e.Subject().(proxy.Player); ok {
-	// 	// e.Subject() IS a proxy.Player
-	// 	// 'player' is now the concrete value
-	// 	p.log.Info("Setting up permissions for player", "player", player.Username())
-
-	// 	// type Func func(permission string) TriState
-	// 	e.SetFunc(func(permission string) permission.TriState {
-	// 		p.log.Info("Permission check", "player", player.Username(), "permission", permission)
-	// 		// For demonstration purposes, we allow the "example.permission" permission and deny all others.
-	// 		// if permission == "example.permission" {
-	// 		// 	return 1 // permission.True
-	// 		// }
-	// 		return 2 // permission.Undefined
-	// 	})
-
-	// }
 }
